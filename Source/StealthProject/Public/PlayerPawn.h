@@ -4,7 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+//#include "EnhancedInput/Public/InputActionValue.h"
+//#include "Components/StaticMeshComponent.h"
 #include "PlayerPawn.generated.h"
+
+struct FInputActionValue;
 
 UCLASS()
 class APlayerPawn : public APawn
@@ -19,10 +23,26 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Meshes")
+	class UStaticMeshComponent* MainMesh;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
 	class UInputMappingContext* InputMapping;
 
-public:	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
+	class UInputConfigData* InputActions;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera")
+	class UCameraComponent* CameraComp;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera")
+	class USpringArmComponent* SpringArmComp;
+
+	void Jump(const FInputActionValue& Value);
+
+	void Move(const FInputActionValue& Value);
+
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
