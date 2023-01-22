@@ -22,14 +22,14 @@ APlayerPawn::APlayerPawn()
 	MainMesh->SetupAttachment(RootComponent);
 
 	//Camera Setup
-	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
+	/*CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(MainMesh);
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
 	SpringArmComp->SetupAttachment(MainMesh);
 	CameraComp->AttachToComponent(SpringArmComp, FAttachmentTransformRules::KeepRelativeTransform);
 	SpringArmComp->bUsePawnControlRotation = true;
 	SpringArmComp->bEnableCameraLag = true;
-	SpringArmComp->TargetArmLength = 300.0f;
+	SpringArmComp->TargetArmLength = 300.0f;*/
 }
 
 void APlayerPawn::Jump(const FInputActionValue& Value)

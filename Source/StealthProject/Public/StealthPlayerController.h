@@ -6,12 +6,12 @@
 #include "GameFramework/PlayerController.h"
 #include "StealthPlayerController.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class STEALTHPROJECT_API AStealthPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
+	protected:
+
+	virtual void BeginPlay() override;
 };

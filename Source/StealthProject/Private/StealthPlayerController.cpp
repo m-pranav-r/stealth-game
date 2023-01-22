@@ -3,3 +3,6 @@
 
 #include "StealthPlayerController.h"
 
+void AStealthPlayerController::BeginPlay()
+{
+}

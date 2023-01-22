@@ -7,9 +7,6 @@
 #include "EnhancedInput/Public/InputAction.h"
 #include "InputConfigData.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class STEALTHPROJECT_API UInputConfigData : public UDataAsset
 {
@@ -21,5 +18,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	UInputAction* IA_Move;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UInputAction* IA_Look;
 
 };
