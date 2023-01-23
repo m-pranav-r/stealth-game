@@ -23,10 +23,12 @@ private:
 	class UNavigationSystemV1* NavArea;
 
 	FVector RandomLocation;
-
 public:
 
 	UFUNCTION()
 		void RandomPatrol();
+
+	UFUNCTION()
+		void DefaultPatrol(uint8 LocIndex);
 
 };

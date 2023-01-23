@@ -30,11 +30,24 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Custom Pawn Sensing")
 		class UPawnSensingComponent* PawnSense;
 
+	UPROPERTY(EditAnywhere, Category = "Patrol")
+	USceneComponent* Patrol_1;
+	
+	UPROPERTY(EditAnywhere, Category = "Patrol")
+	USceneComponent* Patrol_2;
+
 	class APlayerCharacter* PlayerRef;
 
 	class AEnemyAIController* EnemyAIController;
 
+	UPROPERTY(EditAnywhere, Category = "Patrol")
+	float PatrolDelay;
+
+	FTimerHandle PatrolHandle;
+
 	void OnAIMoveCompleted(struct FAIRequestID RequestID, const struct FPathFollowingResult& Result);
+
+	void IntermediaryWait();
 
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
@@ -45,4 +58,11 @@ public:
 	UFUNCTION()
 	void ReactToAlert(APawn* PlayerPawn);
 
+	/*UFUNCTION()
+	void ClearTimerOnAlert();*/
+
+	UPROPERTY(EditAnywhere, Category = "Patrol")
+	TArray <FVector> PatrolLocations;
+
+	uint8 CurrentLoc = 0;
 };
