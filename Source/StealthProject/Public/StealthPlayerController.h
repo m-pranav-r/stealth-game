@@ -14,4 +14,14 @@ class STEALTHPROJECT_API AStealthPlayerController : public APlayerController
 	protected:
 
 	virtual void BeginPlay() override;
+
+protected:
+	
+	class APlayerCharacter* PlayerReference = nullptr;
+
+public:
+
+	APlayerCharacter* GetPlayer();
+
+	void SetPlayerReference(APlayerCharacter* PlayerPointer);
 };

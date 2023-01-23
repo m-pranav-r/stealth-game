@@ -10,6 +10,9 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputConfigData.h"
 #include "Components/CapsuleComponent.h"
+
+#include "Kismet/GameplayStatics.h"
+
 #include "StealthPlayerController.h"
 
 // Sets default values
@@ -35,11 +38,8 @@ APlayerCharacter::APlayerCharacter()
 	MainMesh->SetupAttachment(RootComponent);
 
 	//Collision Setup
-	/*BoxMesh = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxMesh"));
-	BoxMesh->SetupAttachment(MainMesh);
-	FVector NewExtent(Extent, Extent, Extent);
-	BoxMesh->SetBoxExtent(NewExtent);*/
 	GetCapsuleComponent()->InitCapsuleSize(100.0f, 100.0f);
+	GetCapsuleComponent()->SetGenerateOverlapEvents(true);
 
 	//Camera Setup
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
@@ -58,6 +58,7 @@ void APlayerCharacter::BeginPlay()
 
 	if (AStealthPlayerController* PlayerController = Cast<AStealthPlayerController>(Controller))
 	{
+		//PlayerController->SetPlayer(this);
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->ClearAllMappings();
@@ -86,6 +87,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EI->BindAction(InputActions->IA_Jump, ETriggerEvent::Completed, this, &APlayerCharacter::StopJumping);
 	EI->BindAction(InputActions->IA_Move, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
 	EI->BindAction(InputActions->IA_Look, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
+	EI->BindAction(InputActions->IA_CreateAlert, ETriggerEvent::Triggered, this, &APlayerCharacter::CreateAlert);
 
 	UE_LOG(LogTemp, Warning, TEXT("Bindings setup."));
 }
@@ -124,6 +126,11 @@ void APlayerCharacter::StopJumping(const FInputActionValue& Value)
 {
 	UE_LOG(LogTemp, Warning, TEXT("StopJumping called."));
 	ACharacter::StopJumping();
+}
+
+void APlayerCharacter::CreateAlert()
+{
+	PlayerAlertEvent_OnCreate.Broadcast(this->GetActorLocation());
 }
 
 // Called every frame

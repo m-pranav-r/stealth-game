@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "PlayerCharacter.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerAlertEventSignature, FVector, AlertLocation)
+
 struct FInputActionValue;
 
 UCLASS()
@@ -16,6 +18,8 @@ class STEALTHPROJECT_API APlayerCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	APlayerCharacter();
+
+	FPlayerAlertEventSignature PlayerAlertEvent_OnCreate;
 
 protected:
 	// Called when the game starts or when spawned
@@ -49,6 +53,8 @@ protected:
 	void Jump(const FInputActionValue& Value);
 
 	void StopJumping(const FInputActionValue& Value);
+
+	void CreateAlert();
 
 public:	
 	// Called every frame

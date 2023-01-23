@@ -5,4 +5,15 @@
 
 void AStealthPlayerController::BeginPlay()
 {
+    Super::BeginPlay();
+}
+
+APlayerCharacter* AStealthPlayerController::GetPlayer()
+{
+    return PlayerReference;
+}
+
+void AStealthPlayerController::SetPlayerReference(APlayerCharacter* PlayerPointer)
+{
+    PlayerReference = PlayerPointer;
 }
