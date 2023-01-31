@@ -40,14 +40,28 @@ protected:
 
 	class AEnemyAIController* EnemyAIController;
 
+	class ADistCharacter* DistRef;
+
 	UPROPERTY(EditAnywhere, Category = "Patrol")
-	float PatrolDelay;
+	float PatrolDelay = 3.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Patrol")
+	float InvestigateDelay = 2.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Patrol")
+	float ResetDelay = 10.0f;
 
 	FTimerHandle PatrolHandle;
 
 	void OnAIMoveCompleted(struct FAIRequestID RequestID, const struct FPathFollowingResult& Result);
 
 	void IntermediaryWait();
+
+	void Investigate();
+
+	void DestroyExternal();
+
+	bool isOccupied = false;
 
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 

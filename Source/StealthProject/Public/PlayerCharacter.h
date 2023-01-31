@@ -25,26 +25,49 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Meshes")
-	class UStaticMeshComponent* MainMesh;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Skeletal Mesh")
+	USkeletalMesh* MainMesh;
 
 	/*UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Meshes")
 	class UBoxComponent* BoxMesh;*/
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Custom Enhanced Input")
 	class UInputMappingContext* InputMapping;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Custom Enhanced Input")
 	class UInputConfigData* InputActions;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Custom Camera")
 	class UCameraComponent* CameraComp;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Custom Camera")
 	class USpringArmComponent* SpringArmComp;
 
-	/*UPROPERTY(EditAnywhere, Category = "Meshes|Extents")
-		float Extent = 40.0f;*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Custom Collision")
+	TEnumAsByte<ECollisionChannel> TraceChannelProperty = ECC_Pawn;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Custom Collision")
+	float HitLength = 1000.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Custom Movement")
+	float StopSpeed = 1000.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Custom Movement")
+	FVector ScaleFactor = FVector(1.0f, 1.0f, 1.0f);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Custom Movement")
+	float ScaleSpeed = 3.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Mechanics")
+	TSubclassOf<AActor> BP_Poin;
+
+	bool isScaled = false;
+
+	bool needScaling = false;
+
+	float ScalePercentage = 0.0f;
+
+	class UPCAnimInst* AnimInst;
 
 	void Move(const FInputActionValue& Value);
 	
@@ -54,7 +77,13 @@ protected:
 
 	void StopJumping(const FInputActionValue& Value);
 
-	void CreateAlert();
+	void ChangeScale(const FInputActionValue& Value);
+
+	void Interact(const FInputActionValue& Value);
+
+	void CreateHit();
+
+	void CreateDist();
 
 public:	
 	// Called every frame

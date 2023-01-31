@@ -11,7 +11,7 @@ AParkourActor::AParkourActor()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
-	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComp"));
+	TeleportZone = CreateDefaultSubobject<USceneComponent>(TEXT("TeleportZone"));
 	MainMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MainMesh"));
 	MainMesh->SetupAttachment(RootComponent);
 
@@ -31,16 +31,20 @@ void AParkourActor::BeginPlay()
 
 void AParkourActor::OverlapBegin(UPrimitiveComponent* OverlapComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Overlap start with unknown actor."));
 	APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(OtherActor);
-	if (PlayerChar) UE_LOG(LogTemp, Warning, TEXT("Overlap with player started."));
+	if (PlayerChar) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Overlap with player started."));
+	}
 }
 
 void AParkourActor::OverlapEnd(UPrimitiveComponent* OverlapComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Overlap end with unknown actor."));
 	APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(OtherActor);
-	if (PlayerChar) UE_LOG(LogTemp, Warning, TEXT("Overlap with player ended."));
+	if (PlayerChar)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Overlap with player ended."));
+	}
 }
 
 // Called every frame

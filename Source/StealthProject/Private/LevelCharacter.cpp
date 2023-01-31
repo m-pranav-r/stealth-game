@@ -8,18 +8,14 @@
 #include "AITypes.h"
 #include "Perception/PawnSensingComponent.h"
 #include "PlayerCharacter.h"
+#include "DistCharacter.h"
 #include "EnemyAIController.h"
 
-// Sets default values
 ALevelCharacter::ALevelCharacter()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-	//RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+	PrimaryActorTick.bCanEverTick = false;
 	EnemyMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("EnemyMeshMain"));
 	EnemyMesh->SetupAttachment(RootComponent);
-	PlayerCollideSphere = CreateDefaultSubobject<USphereComponent>(TEXT("PlayerCollideSphere"));
-	PlayerCollideSphere->SetupAttachment(RootComponent);
 	PawnSense = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSense"));
 	PawnSense->SetPeripheralVisionAngle(90.0f);
 	
@@ -29,7 +25,6 @@ ALevelCharacter::ALevelCharacter()
 	Patrol_2->SetupAttachment(RootComponent);
 }
 
-// Called when the game starts or when spawned
 void ALevelCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -43,23 +38,38 @@ void ALevelCharacter::BeginPlay()
 
 void ALevelCharacter::OnAIMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {
-	//EnemyAIController->RandomPatrol();
+	if (isOccupied) return;
 	GetWorldTimerManager().SetTimer(PatrolHandle, this, &ALevelCharacter::IntermediaryWait, PatrolDelay, false);
 }
 
 void ALevelCharacter::IntermediaryWait()
 {
+	UE_LOG(LogTemp, Warning, TEXT("EnemyActor::IntermediaryWait() called!"));
 	EnemyAIController->DefaultPatrol(CurrentLoc);
 	CurrentLoc = 1 - CurrentLoc;
 }
 
-// Called every frame
+void ALevelCharacter::Investigate()
+{
+	EnemyAIController->MoveToLocation(DistRef->GetActorLocation());
+	UE_LOG(LogTemp, Warning, TEXT("EnemyActor::Moving to Distraction Location."));
+	GetWorldTimerManager().SetTimer(PatrolHandle, this, &ALevelCharacter::DestroyExternal, InvestigateDelay, false);
+}
+
+void ALevelCharacter::DestroyExternal()
+{
+	DistRef->DestroyExternal();
+	UE_LOG(LogTemp, Warning, TEXT("EnemyActor::Distraction Destroyed!"));
+	isOccupied = false;
+	PawnSense->SetSensingUpdatesEnabled(true);
+	GetWorldTimerManager().SetTimer(PatrolHandle, this, &ALevelCharacter::IntermediaryWait, ResetDelay, false);
+}
+
 void ALevelCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
 
-// Called to bind functionality to input
 void ALevelCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -67,13 +77,31 @@ void ALevelCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void ALevelCharacter::ReactToAlert(APawn* PlayerPawn)
 {
+	if (isOccupied) return;
 	GetWorldTimerManager().ClearTimer(PatrolHandle);
 	EnemyAIController->StopMovement();
 	AEnemyAIController* AIC = Cast<AEnemyAIController>(GetController());
 	if (AIC)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("EnemyActor::Player Caught!."));
+		UE_LOG(LogTemp, Warning, TEXT("EnemyActor::Pawn Caught!."));
 	}
-	GetWorldTimerManager().SetTimer(PatrolHandle, this, &ALevelCharacter::IntermediaryWait, 10.0, false);
+	APlayerCharacter* PC = Cast<APlayerCharacter>(PlayerPawn);
+	if (PC)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("EnemyActor::Player Caught!."));
+		//Actual alert function
+	}
+	ADistCharacter* DA = Cast<ADistCharacter>(PlayerPawn);
+	if (DA)
+	{
+		DistRef = DA;
+		GetWorldTimerManager().ClearTimer(PatrolHandle);
+		isOccupied = true;
+		PawnSense->SetSensingUpdatesEnabled(false);
+		UE_LOG(LogTemp, Warning, TEXT("EnemyActor::Distraction Caught!."));
+		Investigate();
+		return;
+	}
+	GetWorldTimerManager().SetTimer(PatrolHandle, this, &ALevelCharacter::IntermediaryWait, ResetDelay, false);
 }
 

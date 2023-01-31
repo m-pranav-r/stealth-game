@@ -25,6 +25,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Custom Box")
 		class UBoxComponent* BoxComponent;
 
+	UPROPERTY(EditAnywhere, Category = "Custom Mechanics")
+		class USceneComponent* TeleportZone;
+
 	UFUNCTION()
 		void OverlapBegin(UPrimitiveComponent* OverlapComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 

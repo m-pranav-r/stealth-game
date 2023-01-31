@@ -10,8 +10,11 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputConfigData.h"
 #include "Components/CapsuleComponent.h"
-
+#include "Components/SkeletalMeshComponent.h"
+#include "LevelCharacter.h"
+#include "PCAnimInst.h"
 #include "Kismet/GameplayStatics.h"
+#include "DistCharacter.h"
 
 #include "StealthPlayerController.h"
 
@@ -32,10 +35,6 @@ APlayerCharacter::APlayerCharacter()
 	GetCharacterMovement()->MaxWalkSpeed = 500.f;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
-
-	//Mesh Setup
-	MainMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MainMesh"));
-	MainMesh->SetupAttachment(RootComponent);
 
 	//Collision Setup
 	GetCapsuleComponent()->InitCapsuleSize(100.0f, 100.0f);
@@ -66,6 +65,15 @@ void APlayerCharacter::BeginPlay()
 		}
 	}
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
+	if (USkeletalMeshComponent* SkelMesh = this->FindComponentByClass<USkeletalMeshComponent>())
+	{
+		AnimInst = Cast<UPCAnimInst>(SkelMesh->GetAnimInstance());
+		if (!AnimInst)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Cannot Initialize AnimInst"));
+			return;
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -87,7 +95,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EI->BindAction(InputActions->IA_Jump, ETriggerEvent::Completed, this, &APlayerCharacter::StopJumping);
 	EI->BindAction(InputActions->IA_Move, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
 	EI->BindAction(InputActions->IA_Look, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
-	EI->BindAction(InputActions->IA_CreateAlert, ETriggerEvent::Triggered, this, &APlayerCharacter::CreateAlert);
+	EI->BindAction(InputActions->IA_CreateHit, ETriggerEvent::Triggered, this, &APlayerCharacter::CreateHit);
+	EI->BindAction(InputActions->IA_ScaleChange, ETriggerEvent::Triggered, this, &APlayerCharacter::ChangeScale);
+	EI->BindAction(InputActions->IA_Dist, ETriggerEvent::Triggered, this, &APlayerCharacter::CreateDist);
+	EI->BindAction(InputActions->IA_Interact, ETriggerEvent::Triggered, this, &APlayerCharacter::Interact);
 
 	UE_LOG(LogTemp, Warning, TEXT("Bindings setup."));
 }
@@ -104,6 +115,7 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
 	}
+	AnimInst->isMoving = true;
 }
 
 void APlayerCharacter::Look(const FInputActionValue& Value)
@@ -120,6 +132,7 @@ void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Jump called."));
 	ACharacter::Jump();
+	AnimInst->isJumping = true;
 }
 
 void APlayerCharacter::StopJumping(const FInputActionValue& Value)
@@ -128,15 +141,81 @@ void APlayerCharacter::StopJumping(const FInputActionValue& Value)
 	ACharacter::StopJumping();
 }
 
-void APlayerCharacter::CreateAlert()
+void APlayerCharacter::ChangeScale(const FInputActionValue& Value)
 {
-	PlayerAlertEvent_OnCreate.Broadcast(this->GetActorLocation());
+	if (isScaled) isScaled = false;
+	else isScaled = true;
+	needScaling = true;
+}
+
+void APlayerCharacter::Interact(const FInputActionValue& Value)
+{
+
+}
+
+void APlayerCharacter::CreateHit()
+{
+	FHitResult Hit;
+	FVector TraceStart = CameraComp->GetComponentLocation();
+	FVector TraceEnd = CameraComp->GetComponentLocation() + CameraComp->GetComponentRotation().Vector() * HitLength;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, TraceChannelProperty, QueryParams);
+	if (Cast<ALevelCharacter>(Hit.GetActor()))
+	{
+		DrawDebugLine(GetWorld(), TraceStart, TraceEnd, Hit.bBlockingHit ? FColor::Blue : FColor::Red, false, 5.0f, 0, 10.0f);
+		UE_LOG(LogTemp, Log, TEXT("APlayerCharacter::Tracing line: %s to %s"), *TraceStart.ToCompactString(), *TraceEnd.ToCompactString());
+		if (Hit.bBlockingHit && IsValid(Hit.GetActor()))
+		{
+			UE_LOG(LogTemp, Log, TEXT("APlayerCharacter::Trace hit actor: %s"), *Hit.GetActor()->GetName());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Log, TEXT("APlayerCharacter::No Actors were hit"));
+		}
+	}
+}
+
+void APlayerCharacter::CreateDist()
+{
+	FHitResult Hit;
+	FVector TraceStart = CameraComp->GetComponentLocation();
+	FVector TraceEnd = CameraComp->GetComponentLocation() + CameraComp->GetComponentRotation().Vector() * HitLength;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, TraceChannelProperty, QueryParams);
+	DrawDebugLine(GetWorld(), TraceStart, TraceEnd, Hit.bBlockingHit ? FColor::Blue : FColor::Red, false, 5.0f, 0, 10.0f);
+	if (Hit.bBlockingHit)
+	{
+		FVector Location = Hit.Location + FVector(0.0f, 0.0f, 5.0f);
+		FRotator Rotation(0.0f, 0.0f, 0.0f);
+		FActorSpawnParameters SpawnInfo;
+		GetWorld()->SpawnActor<ADistCharacter>(BP_Poin, Location, Rotation, SpawnInfo);
+	}
 }
 
 // Called every frame
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	if (GetVelocity().Size() < StopSpeed)
+	{
+		AnimInst->isMoving = false;
+		AnimInst->isJumping = false;
+	}
+	if (isScaled && needScaling)
+	{
+		ScalePercentage += DeltaTime * ScaleSpeed;
+		this->SetActorRelativeScale3D(((1 - (ScalePercentage * ScalePercentage)) * FVector(1.0f, 1.0f, 1.0f)) + (ScalePercentage * ScalePercentage) * ScaleFactor);
+	}
+	if (ScalePercentage >= 1.0f)
+	{
+		needScaling = false;
+		ScalePercentage = 0.f;
+	}
+	if ((!isScaled) && (needScaling))
+	{
+		ScalePercentage += DeltaTime * ScaleSpeed;
+		this->SetActorRelativeScale3D(((1 - (ScalePercentage * ScalePercentage)) * ScaleFactor) + (ScalePercentage * ScalePercentage) * FVector(1.0f, 1.0f, 1.0f));
+	}
 }
-
