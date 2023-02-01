@@ -21,4 +21,13 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		bool isMoving = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		bool isGot = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		bool isEnemyGot = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		bool isEnemyAlert = false;
 };

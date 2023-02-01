@@ -21,11 +21,8 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditAnywhere, Category = "Custom Mesh")
-		class UStaticMeshComponent* EnemyMesh;
-
 	UPROPERTY(EditAnywhere, Category = "Custom Collision")
-		class USphereComponent* PlayerCollideSphere;
+		class UBoxComponent* BoxComponent;
 
 	UPROPERTY(EditAnywhere, Category = "Custom Pawn Sensing")
 		class UPawnSensingComponent* PawnSense;
@@ -42,6 +39,8 @@ protected:
 
 	class ADistCharacter* DistRef;
 
+	class UPCAnimInst* AnimInst;
+
 	UPROPERTY(EditAnywhere, Category = "Patrol")
 	float PatrolDelay = 3.0f;
 
@@ -50,6 +49,17 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Patrol")
 	float ResetDelay = 10.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Chase")
+	float HitDistance = 10.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Chase")
+	float AcceptDistance = 30.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Chase")
+	float HitCooldown = 3.0f;
+
+	float LastHit = 0.0f;
 
 	FTimerHandle PatrolHandle;
 
@@ -63,7 +73,19 @@ protected:
 
 	bool isOccupied = false;
 
+	bool isAlert = false;
+
+	bool playerIsInRange = false;
+
+	bool isGot = false;
+
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+
+	UFUNCTION()
+		void OverlapBegin(UPrimitiveComponent* OverlapComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+		void OverlapEnd(UPrimitiveComponent* OverlapComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 public:
 	// Called every frame
@@ -71,6 +93,10 @@ public:
 
 	UFUNCTION()
 	void ReactToAlert(APawn* PlayerPawn);
+
+	void Chase(APlayerCharacter* Player);
+
+	void Interact(AActor* CallingActor);
 
 	/*UFUNCTION()
 	void ClearTimerOnAlert();*/

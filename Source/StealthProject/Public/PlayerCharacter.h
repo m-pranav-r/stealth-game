@@ -28,9 +28,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Skeletal Mesh")
 	USkeletalMesh* MainMesh;
 
-	/*UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Meshes")
-	class UBoxComponent* BoxMesh;*/
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Custom Enhanced Input")
 	class UInputMappingContext* InputMapping;
 
@@ -58,14 +55,27 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Custom Movement")
 	float ScaleSpeed = 3.0f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Custom Mechanics")
+	float HitFactor = 20.0f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Mechanics")
 	TSubclassOf<AActor> BP_Poin;
+
+	TWeakObjectPtr<AActor>InteractPointer;
 
 	bool isScaled = false;
 
 	bool needScaling = false;
 
+	bool needTeleport = false;
+
+	bool isTeleporting = false;
+
+	bool isInteractEnemy = false;
+
 	float ScalePercentage = 0.0f;
+
+	float Health = 100.0f;
 
 	class UPCAnimInst* AnimInst;
 
@@ -86,11 +96,16 @@ protected:
 	void CreateDist();
 
 public:	
-	// Called every frame
+	
 	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	void SetInteractPointer(AActor* SettingActor, bool isEnemy);
+
+	void RemoveInteractPointer();
+
+	void Hit();
 
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return SpringArmComp; }
 	

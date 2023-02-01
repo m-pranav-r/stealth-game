@@ -15,7 +15,7 @@
 #include "PCAnimInst.h"
 #include "Kismet/GameplayStatics.h"
 #include "DistCharacter.h"
-
+#include "LevelEntity.h"
 #include "StealthPlayerController.h"
 
 // Sets default values
@@ -70,7 +70,7 @@ void APlayerCharacter::BeginPlay()
 		AnimInst = Cast<UPCAnimInst>(SkelMesh->GetAnimInstance());
 		if (!AnimInst)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Cannot Initialize AnimInst"));
+			UE_LOG(LogTemp, Warning, TEXT("APlayerCharacter::Cannot Initialize AnimInst"));
 			return;
 		}
 	}
@@ -81,14 +81,14 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	UE_LOG(LogTemp, Warning, TEXT("Input setup initiated."));
+	UE_LOG(LogTemp, Warning, TEXT("APlayerCharacter::Input setup initiated."));
 
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
 	Subsystem->ClearAllMappings();
 	Subsystem->AddMappingContext(InputMapping, 0);
 
-	UE_LOG(LogTemp, Warning, TEXT("Subsystem setup."));
+	UE_LOG(LogTemp, Warning, TEXT("APlayerCharacter::Subsystem setup."));
 
 	UEnhancedInputComponent* EI = Cast<UEnhancedInputComponent>(PlayerInputComponent);
 	EI->BindAction(InputActions->IA_Jump, ETriggerEvent::Triggered, this, &APlayerCharacter::Jump);
@@ -100,7 +100,40 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EI->BindAction(InputActions->IA_Dist, ETriggerEvent::Triggered, this, &APlayerCharacter::CreateDist);
 	EI->BindAction(InputActions->IA_Interact, ETriggerEvent::Triggered, this, &APlayerCharacter::Interact);
 
-	UE_LOG(LogTemp, Warning, TEXT("Bindings setup."));
+	UE_LOG(LogTemp, Warning, TEXT("APlayerCharacter::Bindings setup."));
+}
+
+void APlayerCharacter::SetInteractPointer(AActor* SettingActor, bool isEnemy)
+{
+	if (isEnemy)
+	{
+		InteractPointer = Cast<ALevelCharacter>(SettingActor);
+		if (InteractPointer.IsValid()) UE_LOG(LogTemp, Warning, TEXT("APlayerCharacter::Enemy pointer primed!"));
+	}
+	else
+	{
+		InteractPointer = Cast<ALevelEntity>(SettingActor);
+		if (InteractPointer.IsValid()) UE_LOG(LogTemp, Warning, TEXT("APlayerCharacter::Enemy pointer primed!"));
+	}
+	isInteractEnemy = isEnemy;
+}
+
+void APlayerCharacter::RemoveInteractPointer()
+{
+	InteractPointer.Reset();
+	UE_LOG(LogTemp, Warning, TEXT("APlayerCharacter::Interaction pointer nulled!"));
+}
+
+void APlayerCharacter::Hit()
+{
+	if (Health <= 1.0f)
+	{
+		DisableInput(GetWorld()->GetFirstPlayerController());
+		AnimInst->isGot = true;
+		UE_LOG(LogTemp, Error, TEXT("APlayerCharacter::Game Over!"));
+	}
+	Health -= HitFactor;
+	UE_LOG(LogTemp, Warning, TEXT("APlayerCharacter::Ouch!"));
 }
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
@@ -150,7 +183,17 @@ void APlayerCharacter::ChangeScale(const FInputActionValue& Value)
 
 void APlayerCharacter::Interact(const FInputActionValue& Value)
 {
-
+	if (!InteractPointer.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("APlayerCharacter::Cannot Interact, interaction pointer not set!"));
+		return;
+	}
+	if (isInteractEnemy)
+	{
+		Cast<ALevelCharacter>(InteractPointer.Get())->Interact(this);
+		return;
+	}
+	Cast<ALevelEntity>(InteractPointer.Get())->Interact(this);
 }
 
 void APlayerCharacter::CreateHit()
